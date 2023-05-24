@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "CNcontract";
+
+package CNcontract;
+
+service CNcontract{
+    rpc submitImage(stream ImageBlock) returns (Identifier);
+    rpc getListOfLandMarks(Identifier) returns (ListOfLandMarkResult);
+    rpc getMapOfIdentifier(Identifier) returns (stream ImageBlock);
+    rpc getAboveCertainty(Certainty) returns (ListOfPhotos);
+
+}
+
+message Certainty{
+  float certainty = 1;
+}
+
+message ImageBlock{
+  bytes data = 1;
+}
+
+message Identifier{
+  string identifier = 1;
+}
+
+message ListOfLandMarkResult{
+  repeated LandMarkResult LandMarkResult = 1;
+}
+
+message LandMarkResult{
+  string landmarkName = 1;
+  Localization localization = 2;
+  float certainty = 3;
+}
+
+message Localization{
+  float latitude = 1;
+  float longitude = 2;
+}
+
+message Photos{
+  string photoName = 1;
+  string locationName = 2;
+}
+
+message ListOfPhotos{
+  repeated Photos photos = 1;
+}
