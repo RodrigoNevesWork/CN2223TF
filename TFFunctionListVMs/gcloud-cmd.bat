@@ -1,0 +1,1 @@
+gcloud functions deploy TFFunctionListVMs --project=cn2223-t3-g05 --allow-unauthenticated --entry-point=TFFunctionListVMs --runtime=java11 --trigger-http --region=europe-west1 --source=target/deployment  --service-account=cn2223-tf-sa@cn2223-t3-g05.iam.gserviceaccount.com --max-instances=10
