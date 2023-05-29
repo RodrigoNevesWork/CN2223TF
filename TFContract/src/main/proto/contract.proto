@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 option java_multiple_files = true;
 option java_package = "CNcontract";
 
@@ -11,6 +13,7 @@ service CNcontract{
     rpc getListOfLandMarks(Identifier) returns (ListOfLandMarkResult);
     rpc getMapOfIdentifier(Identifier) returns (stream ImageBlock);
     rpc getAboveCertainty(Certainty) returns (ListOfPhotos);
+    rpc publishMessageToTopic(PublishMessageRequest) returns (google.protobuf.Empty);
 
 }
 message Void {
@@ -51,4 +54,10 @@ message Photos{
 
 message ListOfPhotos{
   repeated Photos photos = 1;
+}
+
+message PublishMessageRequest {
+  Identifier identifier = 1;
+  string bucketName = 2;
+  string blobName = 3;
 }
