@@ -4,16 +4,19 @@ import io.grpc.stub.StreamObserver;
 public class ClientStreamObserver_Identifier implements StreamObserver<Identifier> {
     @Override
     public void onNext(Identifier identifier) {
-        System.out.println(identifier.getIdentifier());
+        // Handle the received identifier
+        System.out.println("Received identifier: " + identifier);
     }
 
     @Override
     public void onError(Throwable throwable) {
-        System.out.println("Error: " + throwable.getMessage());
+        // Handle any errors
+        System.err.println("Error: " + throwable.getMessage());
     }
 
     @Override
     public void onCompleted() {
-        System.out.println("Stream completed!");
+        // Handle the completion of the RPC call
+        System.out.println("Image submission completed.");
     }
 }
