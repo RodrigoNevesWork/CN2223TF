@@ -3,7 +3,7 @@ import java.io.Serializable;
 public class AnaliseResult implements Serializable {
     private String description;
     private float certainty;
-    private Coordinates coordenates;
+    private Coordinates coordinates;
 
     public String getDescription() {
         return description;
@@ -21,18 +21,18 @@ public class AnaliseResult implements Serializable {
         this.certainty = certainty;
     }
 
-    public Coordinates getCoordenates() {
-        return coordenates;
+    public Coordinates getCoordinates() {
+        return coordinates;
     }
 
-    public void setCoordenates(Coordinates coordenates) {
-        this.coordenates = coordenates;
+    public void setCoordinates(Coordinates coordinates) {
+        this.coordinates = coordinates;
     }
 
     public AnaliseResult(String description, float certainty, Coordinates coordinates){
         this.description = description;
         this.certainty = certainty;
-        this.coordenates = coordinates;
+        this.coordinates = coordinates;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class AnaliseResult implements Serializable {
         return "AnaliseResult{" +
                 "description='" + description + '\'' +
                 ", certainty=" + certainty +
-                ", coordenates=" + coordenates +
+                ", coordinates=" + coordinates +
                 '}';
     }
 }

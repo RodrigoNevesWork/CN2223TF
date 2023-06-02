@@ -55,13 +55,9 @@ public class LandmarksApp {
         }).build();
 
         // Start the subscriber
-        subscriber.startAsync().awaitRunning();
+        subscriber.startAsync();
+        subscriber.awaitTerminated();
 
-        // Wait until a message is received
-        while (true) {
-
-            Thread.sleep(1000);
-        }
     }
 }
 

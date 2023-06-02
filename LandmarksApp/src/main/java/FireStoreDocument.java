@@ -9,6 +9,9 @@ public class FireStoreDocument implements Serializable {
         this.ar = ar;
         this.blobName = blobName;
     }
+    public FireStoreDocument(){ //To deserialize object
+
+    }
 
     public List<AnaliseResult> getAr() {
         return ar;

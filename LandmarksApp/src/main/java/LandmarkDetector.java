@@ -66,7 +66,7 @@ public class LandmarkDetector {
                             coordinates);
 
                     if(first){
-                        getStaticMapSaveImage(bucketToSave,randomName,analiseResult.getCoordenates());
+                        getStaticMapSaveImage(bucketToSave,randomName,analiseResult.getCoordinates());
                         first = false;
                     }
 
