@@ -2,8 +2,10 @@ import CNcontract.*;
 import CNcontract.Void;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import observers.ServerStreamObserver_ImageBlock;
 
 import java.util.Scanner;
+import java.util.UUID;
 
 
 public class TFServer extends CNcontractGrpc.CNcontractImplBase{
@@ -32,9 +34,12 @@ public class TFServer extends CNcontractGrpc.CNcontractImplBase{
     }
     @Override
     public StreamObserver<ImageBlock> submitImage(StreamObserver<Identifier> responseObserver) {
-       //
-        return null;
+        return new ServerStreamObserver_ImageBlock(responseObserver);
+        //serverStreamObserver_imageBlock.onCompleted();
+
     }
+
+
     @Override
     public void getListOfLandMarks(Identifier request, StreamObserver<ListOfLandMarkResult> responseObserver) {
         // Implement the logic for getListOfLandMarks method

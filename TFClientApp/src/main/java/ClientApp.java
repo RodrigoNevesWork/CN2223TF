@@ -53,7 +53,7 @@ public class ClientApp {
                 try {
                     // Attempt to establish the connection
                     //WHEN CREATING INSTANCE GROUP, USE NAME 'instance-group-tf-server'
-                    ManagedChannel channel = ManagedChannelBuilder.forAddress(selectedIP, 8000)
+                    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 8000)
                             .usePlaintext()
                             .build();
 
