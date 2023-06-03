@@ -1,4 +1,5 @@
 import CNcontract.Identifier;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 public class ClientStreamObserver_Identifier implements StreamObserver<Identifier> {
@@ -11,7 +12,7 @@ public class ClientStreamObserver_Identifier implements StreamObserver<Identifie
     @Override
     public void onError(Throwable throwable) {
         // Handle any errors
-        System.err.println("Error: " + throwable.getMessage());
+        System.err.println(((StatusRuntimeException) throwable).getStatus().getDescription());
     }
 
     @Override

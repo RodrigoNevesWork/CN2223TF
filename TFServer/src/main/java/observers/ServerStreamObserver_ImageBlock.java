@@ -50,7 +50,7 @@ public class ServerStreamObserver_ImageBlock implements StreamObserver<ImageBloc
         try {
             PubSubUtils.publishMessage(identifier,"cn-bucket-europe",blobName);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            onError(e);
         }
 
         // Create an Identifier message with the generated identifier

@@ -3,35 +3,35 @@ package utils;
 import java.io.Serializable;
 
 public class Coordinates implements Serializable {
-    private Double lat;
-    private Double lng;
+    private Float lat;
+    private Float lng;
 
 
-    public Coordinates(Double lat, Double lng) {
+    public Coordinates(Float lat, Float lng) {
         this.lat = lat;
         this.lng = lng;
     }
     public Coordinates(){}
 
-    public Double getLatitude() {
+    public Float getLatitude() {
         return lat;
     }
 
-    public Double getLongitude() {
+    public Float getLongitude() {
         return lng;
     }
 
-    public void setLatitude(Double lat) {
+    public void setLatitude(Float lat) {
         this.lat = lat;
     }
 
-    public void setLongitude(Double lng) {
+    public void setLongitude(Float lng) {
         this.lng = lng;
     }
 
     @Override
     public String toString() {
-        return "Coordenates{" +
+        return "Coordinates{" +
                 "lat=" + lat +
                 ", lng=" + lng +
                 '}';

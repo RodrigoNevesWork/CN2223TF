@@ -1,13 +1,21 @@
 import CNcontract.ImageBlock;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientStreamObserver_ImageBlock implements StreamObserver<ImageBlock> {
-    private List<byte[]> imageBlocks; // List to store the received image blocks
+    private List<byte[]> imageBlocks;
+    private String id;
 
+    public ClientStreamObserver_ImageBlock(String id) {
+        this.id=id;
+        this.imageBlocks = new ArrayList<>();
+    }
     @Override
     public void onNext(ImageBlock imageBlock) {
         // Handle the received image block
@@ -18,7 +26,7 @@ public class ClientStreamObserver_ImageBlock implements StreamObserver<ImageBloc
     @Override
     public void onError(Throwable throwable) {
         // Handle any errors
-        System.err.println("Error: " + throwable.getMessage());
+        System.err.println(((StatusRuntimeException) throwable).getStatus().getDescription());
     }
 
     @Override
@@ -41,9 +49,12 @@ public class ClientStreamObserver_ImageBlock implements StreamObserver<ImageBloc
         }
 
         // Save the complete image as a file
-        try (FileOutputStream outputStream = new FileOutputStream("static_image.jpg")) {
+        String fileName = id + ".png";
+        String filePath = Paths.get("").toAbsolutePath().resolve("staticImages").resolve(fileName).toString();
+
+        try (FileOutputStream outputStream = new FileOutputStream(filePath)) {
             outputStream.write(completeImageData);
-            System.out.println("Saved complete image.");
+            System.out.println("Saved complete image to " + filePath);
         } catch (IOException e) {
             System.err.println("Error saving complete image: " + e.getMessage());
         }

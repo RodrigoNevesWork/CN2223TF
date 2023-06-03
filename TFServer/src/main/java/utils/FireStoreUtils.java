@@ -6,76 +6,56 @@ import com.google.cloud.firestore.*;
 import java.util.ArrayList;
 import java.util.List;
 
+public class FireStoreUtils implements AutoCloseable {
 
-public class FireStoreUtils{
+    private Firestore db;
+    private CollectionReference currentCollection;
 
+    public FireStoreUtils(String collectionName) {
+        FirestoreOptions options = FirestoreOptions.newBuilder().build();
+        db = options.getService();
+        currentCollection = db.collection(collectionName);
+    }
 
-        static Firestore db;
-        static CollectionReference currentCollection;
+    @Override
+    public void close() throws Exception {
+        db.close();
+    }
 
-        private static void init(String collectionName) {
+    public FireStoreDocument useGetDoc(String docID) throws Exception {
+        FireStoreDocument doc = getDocumentByID(docID);
+        return doc;
+    }
 
-            FirestoreOptions options = FirestoreOptions.newBuilder().build();
+    public List<AboveCertaintyResult> useGetAboveCertaintyResult(Float certainty) throws Exception {
+        List<AboveCertaintyResult> results = new ArrayList<>();
 
-            db = options.getService();
-            currentCollection = db.collection(collectionName);
-        }
+        Iterable<DocumentReference> allDocs = currentCollection.listDocuments();
 
-        private static void close() throws Exception {
-            db.close();
-        }
+        for (DocumentReference docref : allDocs) {
+            ApiFuture<DocumentSnapshot> docfut = docref.get();
 
+            DocumentSnapshot doc = docfut.get();
 
+            FireStoreDocument fsd = doc.toObject(FireStoreDocument.class);
 
-        public static FireStoreDocument useGetDoc(String collectionName, String docID) throws Exception {
-            init(collectionName);
-            FireStoreDocument doc = getDocumentByID(docID);
-            close();
-            return doc;
-        }
-
-        public static List<AboveCertaintyResult> useGetAboveCertaintyResult(String collectionName,double certainty) throws Exception {
-            init(collectionName);
-
-            List<AboveCertaintyResult> results = new ArrayList<>();
-
-            Iterable<DocumentReference> allDocs = currentCollection.listDocuments();
-
-            for (DocumentReference docref : allDocs) {
-                ApiFuture<DocumentSnapshot> docfut = docref.get();
-
-                DocumentSnapshot doc = docfut.get();
-
-                FireStoreDocument fsd = doc.toObject(FireStoreDocument.class);
-
-                if(fsd == null) throw new Exception("This document is null");
-                for(AnaliseResult analise : fsd.ar){
-                    if(analise.getCertainty() >= certainty) results.add(new AboveCertaintyResult(fsd.getBlobName(),analise.getDescription()));
-                }
+            if (fsd == null) throw new Exception("This document is null");
+            for (AnaliseResult analise : fsd.ar) {
+                if (analise.getCertainty() >= certainty) results.add(new AboveCertaintyResult(fsd.getBlobName(), analise.getDescription()));
             }
-            close();
-            return results;
         }
+        return results;
+    }
 
+    private FireStoreDocument getDocumentByID(String docID) throws Exception {
+        DocumentReference docRef = currentCollection.document(docID);
 
-        private static FireStoreDocument getDocumentByID(String docID) throws Exception{
-            DocumentReference docRef = currentCollection.document(docID);
+        ApiFuture<DocumentSnapshot> future = docRef.get();
 
-            ApiFuture<DocumentSnapshot> future = docRef.get();
+        DocumentSnapshot document = future.get();
 
-            DocumentSnapshot document = future.get();
-
-            if (document.exists()) {
-                return document.toObject(FireStoreDocument.class);
-            } else  throw new Exception("This Document does not exists");
-        }
-
-
-
-
-
-
-
-
-
+        if (document.exists()) {
+            return document.toObject(FireStoreDocument.class);
+        } else throw new Exception("This Document does not exist");
+    }
 }

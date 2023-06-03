@@ -1,4 +1,5 @@
 import CNcontract.*;
+import CNcontract.Void;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -22,7 +23,7 @@ public class ClientApp {
     private static CNcontractGrpc.CNcontractBlockingStub blockStub;
     public static void main(String[] args) {
 
-        List<String> listOfIPs = getVMsIP(functionUrl);
+        List<String> listOfIPs = getVMsIP();
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
         while (!exit) {
@@ -53,7 +54,8 @@ public class ClientApp {
                 try {
                     // Attempt to establish the connection
                     //WHEN CREATING INSTANCE GROUP, USE NAME 'instance-group-tf-server'
-                    ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 8000)
+                    //34.77.52.107
+                    ManagedChannel channel = ManagedChannelBuilder.forAddress(selectedIP, 8000)
                             .usePlaintext()
                             .build();
 
@@ -61,6 +63,7 @@ public class ClientApp {
                     System.out.println("Connection established with " + selectedIP);
                     connected = true;
                     // Loop for additional options after successful connection
+                    noBlockStub=CNcontractGrpc.newStub(channel);
                     boolean innerExit = false;
                     while (!innerExit) {
                         System.out.println("\nPlease select an option:");
@@ -72,11 +75,9 @@ public class ClientApp {
                         System.out.print("Enter your choice (1-4): \n");
                         int optionChoice = scanner.nextInt();
 
-
-
-                        noBlockStub = CNcontractGrpc.newStub(channel);
                         switch (optionChoice) {
                             case 1:
+
                                 ClientStreamObserver_Identifier clientStreamObserver_identifier = new ClientStreamObserver_Identifier();
                                 System.out.println("Upload Image for Analysis option selected.");
                                 System.out.println("What is the path of the image to upload?");
@@ -86,11 +87,15 @@ public class ClientApp {
                                 break;
                             case 2:
                                 System.out.println("Get Analysis Information option selected.");
-                                analysisOfImage(noBlockStub,scanner);
+                                System.out.println("What is the identifier of the request?");
+                                String identifier = scanner.next();
+                                analysisOfImage(noBlockStub,identifier);
                                 // Add your code for getting analysis information here
                                 break;
                             case 3:
-                                getImagesAboveCertainty(noBlockStub,scanner);
+                                System.out.println("Enter the certainty threshold:");
+                                float threshold = scanner.nextFloat();
+                                getImagesAboveCertainty(noBlockStub, threshold);
                                 break;
                             case 4:
                                 System.out.println("Going back to IP selection.");
@@ -105,6 +110,7 @@ public class ClientApp {
                                 System.out.println("Invalid option choice. Please try again.");
                                 break;
                         }
+                        Thread.sleep(2000);
                     }
                     // Close the channel when done
                     channel.shutdown();
@@ -124,20 +130,16 @@ public class ClientApp {
 
     }
 
-    private static void getImagesAboveCertainty(CNcontractGrpc.CNcontractStub noBlockStub, Scanner scanner) {
+    private static void getImagesAboveCertainty(CNcontractGrpc.CNcontractStub noBlockStub, float threshold) {
         ClientStreamObserver_ListOfPhotos clientStreamObserver_listOfPhotos = new ClientStreamObserver_ListOfPhotos();
-        System.out.println("Enter the certainty threshold:");
-        float threshold = scanner.nextFloat();
-        scanner.nextLine(); // Consume the newline character
         noBlockStub.getAboveCertainty(Certainty.newBuilder().setCertainty(threshold).build(), clientStreamObserver_listOfPhotos);
+
 
     }
 
-    private static void analysisOfImage(CNcontractGrpc.CNcontractStub noBlockStub, Scanner scanner){
+    private static void analysisOfImage(CNcontractGrpc.CNcontractStub noBlockStub,String id){
         ClientStreamObserver_ListOfLandmarkResults clientStreamObserver_listOfLandmarkResults = new ClientStreamObserver_ListOfLandmarkResults();
-        ClientStreamObserver_ImageBlock ClientStreamObserver_imageBlock = new ClientStreamObserver_ImageBlock();
-        System.out.println("Enter the identifier:");
-        String id = scanner.nextLine();
+        ClientStreamObserver_ImageBlock ClientStreamObserver_imageBlock = new ClientStreamObserver_ImageBlock(id);
         Identifier identifier = Identifier.newBuilder().setIdentifier(id).build();
         noBlockStub.getListOfLandMarks(identifier,clientStreamObserver_listOfLandmarkResults);
         noBlockStub.getMapOfIdentifier(identifier,ClientStreamObserver_imageBlock);
@@ -166,12 +168,12 @@ public class ClientApp {
         }
     }
 
-    private static List<String> getVMsIP(String functionUrl){
+    private static List<String> getVMsIP(){
         // Create an instance of HttpClient
         HttpClient httpClient = HttpClient.newHttpClient();
         // Create an instance of HttpRequest with the desired request parameters
         HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(functionUrl))
+                .uri(URI.create(ClientApp.functionUrl))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString("Request payload"))
                 .build();

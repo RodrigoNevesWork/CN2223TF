@@ -1,4 +1,5 @@
 import CNcontract.LandMarkResult;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import CNcontract.ListOfLandMarkResult;
 
@@ -19,7 +20,7 @@ public class ClientStreamObserver_ListOfLandmarkResults implements StreamObserve
     @Override
     public void onError(Throwable throwable) {
         // Handle any errors
-        System.err.println("Error: " + throwable.getMessage());
+        System.err.println(((StatusRuntimeException) throwable).getStatus().getDescription());
     }
 
     @Override

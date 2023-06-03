@@ -50,7 +50,7 @@ public class GoogleCloudStorageUtils {
     }
 
 
-    private byte[] downloadFromBucket(String bucketName, String fileName) throws IOException {
+    public static byte[] downloadFromBucket(String bucketName, String fileName) throws IOException {
 
         Blob blob = storage.get(bucketName,fileName);
 

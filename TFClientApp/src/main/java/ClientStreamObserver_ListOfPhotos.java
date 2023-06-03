@@ -1,5 +1,6 @@
 import CNcontract.ListOfPhotos;
 import CNcontract.Photos;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 public class ClientStreamObserver_ListOfPhotos implements StreamObserver<ListOfPhotos> {
@@ -16,7 +17,7 @@ public class ClientStreamObserver_ListOfPhotos implements StreamObserver<ListOfP
     @Override
     public void onError(Throwable throwable) {
         // Handle any errors
-        System.err.println("Error: " + throwable.getMessage());
+        System.err.println(((StatusRuntimeException) throwable).getStatus().getDescription());
     }
 
     @Override

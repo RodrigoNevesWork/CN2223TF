@@ -45,7 +45,11 @@
             <artifactId>grpc-stub</artifactId>
             <version>1.53.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-core</artifactId>
+            <version>1.53.0</version>
+        </dependency>
         <dependency>
             <groupId>isel.cn</groupId>
             <artifactId>CN2223TFContract</artifactId>
