@@ -11,11 +11,14 @@ import java.util.List;
 public class ClientStreamObserver_ImageBlock implements StreamObserver<ImageBlock> {
     private List<byte[]> imageBlocks;
     private String id;
+    private boolean errorHandled;
 
     public ClientStreamObserver_ImageBlock(String id) {
-        this.id=id;
+        this.id = id;
         this.imageBlocks = new ArrayList<>();
+        this.errorHandled = false;
     }
+
     @Override
     public void onNext(ImageBlock imageBlock) {
         // Handle the received image block
@@ -25,17 +28,28 @@ public class ClientStreamObserver_ImageBlock implements StreamObserver<ImageBloc
 
     @Override
     public void onError(Throwable throwable) {
-        // Handle any errors
-        System.err.println(((StatusRuntimeException) throwable).getStatus().getDescription());
+        if (throwable instanceof StatusRuntimeException) {
+            // Handle the error if errorHandled is false
+            if (!errorHandled) {
+                StatusRuntimeException statusException = (StatusRuntimeException) throwable;
+                System.err.println(statusException.getStatus().getDescription());
+            }
+        } else {
+            // Handle the error without checking errorHandled
+            System.err.println(throwable.getMessage());
+        }
     }
+
 
     @Override
     public void onCompleted() {
         // Handle the completion of the RPC call
         System.out.println("Image reception completed.");
 
-        // Save the received image blocks as a complete image
-        saveCompleteImage();
+        // Save the received image blocks as a complete image if errorHandled is false
+        if (!errorHandled) {
+            saveCompleteImage();
+        }
     }
 
     private void saveCompleteImage() {
@@ -58,5 +72,9 @@ public class ClientStreamObserver_ImageBlock implements StreamObserver<ImageBloc
         } catch (IOException e) {
             System.err.println("Error saving complete image: " + e.getMessage());
         }
+    }
+
+    public void setErrorHandled(boolean errorHandled) {
+        this.errorHandled = errorHandled;
     }
 }

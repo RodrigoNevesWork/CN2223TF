@@ -6,14 +6,10 @@ option java_package = "CNcontract";
 package CNcontract;
 
 service CNcontract{
-    rpc isAlive(Void) returns (Identifier);
     rpc submitImage(stream ImageBlock) returns (Identifier);
     rpc getListOfLandMarks(Identifier) returns (ListOfLandMarkResult);
     rpc getMapOfIdentifier(Identifier) returns (stream ImageBlock);
     rpc getAboveCertainty(Certainty) returns (ListOfPhotos);
-
-}
-message Void {
 
 }
 

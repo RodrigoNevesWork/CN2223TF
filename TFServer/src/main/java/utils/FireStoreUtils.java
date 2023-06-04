@@ -2,52 +2,67 @@ package utils;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.google.cloud.firestore.Firestore;
+import exceptions.FirestoreInvalidIdentifierException;
+import exceptions.FirestoreNotProcessedException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FireStoreUtils implements AutoCloseable {
+public class FireStoreUtils {
 
-    private Firestore db;
-    private CollectionReference currentCollection;
+    private static Firestore db;
+    private static CollectionReference currentCollection;
 
-    public FireStoreUtils(String collectionName) {
+    private FireStoreUtils() {
+    }
+
+    public static void initialize(String collectionName) throws Exception {
         FirestoreOptions options = FirestoreOptions.newBuilder().build();
         db = options.getService();
         currentCollection = db.collection(collectionName);
+
+        // Create a dummy document to ensure the collection exists
+        createDummyDocument();
     }
 
-    @Override
-    public void close() throws Exception {
+    public static void close() throws Exception {
         db.close();
     }
 
-    public FireStoreDocument useGetDoc(String docID) throws Exception {
+    public static FireStoreDocument useGetDoc(String docID) throws Exception {
         FireStoreDocument doc = getDocumentByID(docID);
         return doc;
     }
 
-    public List<AboveCertaintyResult> useGetAboveCertaintyResult(Float certainty) throws Exception {
+    public static List<AboveCertaintyResult> useGetAboveCertaintyResult(Float certainty) throws Exception {
         List<AboveCertaintyResult> results = new ArrayList<>();
 
         Iterable<DocumentReference> allDocs = currentCollection.listDocuments();
 
-        for (DocumentReference docref : allDocs) {
-            ApiFuture<DocumentSnapshot> docfut = docref.get();
+        for (DocumentReference docRef : allDocs) {
+            ApiFuture<DocumentSnapshot> docFuture = docRef.get();
 
-            DocumentSnapshot doc = docfut.get();
+            DocumentSnapshot doc = docFuture.get();
 
             FireStoreDocument fsd = doc.toObject(FireStoreDocument.class);
-
-            if (fsd == null) throw new Exception("This document is null");
-            for (AnaliseResult analise : fsd.ar) {
-                if (analise.getCertainty() >= certainty) results.add(new AboveCertaintyResult(fsd.getBlobName(), analise.getDescription()));
+            if(fsd.ar!=null){
+                for (AnaliseResult analise : fsd.getAr()) {
+                    if (analise.getCertainty() >= certainty) {
+                        results.add(new AboveCertaintyResult(fsd.getBlobName(), analise.getDescription()));
+                    }
+                }
             }
         }
         return results;
     }
 
-    private FireStoreDocument getDocumentByID(String docID) throws Exception {
+    public static void addEmptyDocument(String docID) throws Exception {
+        DocumentReference docRef = currentCollection.document(docID);
+        docRef.set(new FireStoreDocument()); // Create an empty document
+    }
+
+    private static FireStoreDocument getDocumentByID(String docID) throws Exception {
         DocumentReference docRef = currentCollection.document(docID);
 
         ApiFuture<DocumentSnapshot> future = docRef.get();
@@ -56,6 +71,11 @@ public class FireStoreUtils implements AutoCloseable {
 
         if (document.exists()) {
             return document.toObject(FireStoreDocument.class);
-        } else throw new Exception("This Document does not exist");
+        } else throw new FirestoreInvalidIdentifierException("Invalid identifier");
+    }
+
+    private static void createDummyDocument() throws Exception {
+        DocumentReference dummyDocRef = currentCollection.document("dummy");
+        dummyDocRef.set(new FireStoreDocument()); // Create a dummy document
     }
 }

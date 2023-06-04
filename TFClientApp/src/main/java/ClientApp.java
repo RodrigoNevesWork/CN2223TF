@@ -1,5 +1,7 @@
-import CNcontract.*;
-import CNcontract.Void;
+import CNcontract.CNcontractGrpc;
+import CNcontract.Certainty;
+import CNcontract.Identifier;
+import CNcontract.ImageBlock;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -150,7 +152,6 @@ public class ClientApp {
                         case 5:
                             System.out.println("Exiting the program.");
                             innerExit = true;
-                            connected = true;
                             break;
                         default:
                             System.out.println("Invalid option choice. Please try again.");
@@ -180,11 +181,11 @@ public class ClientApp {
     }
 
     private static void analysisOfImage(CNcontractGrpc.CNcontractStub noBlockStub,String id){
-        ClientStreamObserver_ListOfLandmarkResults clientStreamObserver_listOfLandmarkResults = new ClientStreamObserver_ListOfLandmarkResults();
-        ClientStreamObserver_ImageBlock ClientStreamObserver_imageBlock = new ClientStreamObserver_ImageBlock(id);
+        ClientStreamObserver_ImageBlock clientStreamObserver_imageBlock = new ClientStreamObserver_ImageBlock(id);
+        ClientStreamObserver_ListOfLandmarkResults clientStreamObserver_listOfLandmarkResults = new ClientStreamObserver_ListOfLandmarkResults(clientStreamObserver_imageBlock);
         Identifier identifier = Identifier.newBuilder().setIdentifier(id).build();
         noBlockStub.getListOfLandMarks(identifier,clientStreamObserver_listOfLandmarkResults);
-        noBlockStub.getMapOfIdentifier(identifier,ClientStreamObserver_imageBlock);
+        noBlockStub.getMapOfIdentifier(identifier,clientStreamObserver_imageBlock);
     }
     private static void submitImage(String imagePath, ClientStreamObserver_Identifier clientStreamObserver_identifier){
         StreamObserver<ImageBlock> imageStream = noBlockStub.submitImage(clientStreamObserver_identifier);

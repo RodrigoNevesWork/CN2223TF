@@ -5,6 +5,12 @@ import CNcontract.ListOfLandMarkResult;
 
 public class ClientStreamObserver_ListOfLandmarkResults implements StreamObserver<ListOfLandMarkResult> {
 
+    private final ClientStreamObserver_ImageBlock imageBlockObserver;
+
+    public ClientStreamObserver_ListOfLandmarkResults(ClientStreamObserver_ImageBlock imageBlockObserver) {
+        this.imageBlockObserver = imageBlockObserver;
+    }
+
     @Override
     public void onNext(ListOfLandMarkResult result) {
         // Handle the received list of landmark results
@@ -19,9 +25,17 @@ public class ClientStreamObserver_ListOfLandmarkResults implements StreamObserve
 
     @Override
     public void onError(Throwable throwable) {
-        // Handle any errors
-        System.err.println(((StatusRuntimeException) throwable).getStatus().getDescription());
+        if (throwable instanceof StatusRuntimeException) {
+            StatusRuntimeException statusException = (StatusRuntimeException) throwable;
+            System.err.println( statusException.getStatus().getDescription());
+
+            // Set the errorHandled variable in the imageBlockObserver to true
+            imageBlockObserver.setErrorHandled(true);
+        } else {
+            System.err.println( throwable.getMessage());
+        }
     }
+
 
     @Override
     public void onCompleted() {

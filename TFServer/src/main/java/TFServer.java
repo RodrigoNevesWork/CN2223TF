@@ -1,6 +1,7 @@
 import CNcontract.*;
-import CNcontract.Void;
 import com.google.protobuf.ByteString;
+import exceptions.FirestoreInvalidIdentifierException;
+import exceptions.FirestoreNotProcessedException;
 import io.grpc.LoadBalancerRegistry;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
@@ -16,15 +17,14 @@ import java.util.*;
 public class TFServer extends CNcontractGrpc.CNcontractImplBase{
 
     private static int srvPort = 8000;
-    private FireStoreUtils fireStoreUtils;
 
     public static void main(String[] args) {
         try {
             // Initialize FireStoreUtils
-            FireStoreUtils fireStoreUtils = new FireStoreUtils("requests_information");
             LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
             // Create and start the gRPC server
-            io.grpc.Server svc = ServerBuilder.forPort(srvPort).addService(new TFServer(fireStoreUtils)).build();
+            io.grpc.Server svc = ServerBuilder.forPort(srvPort).addService(new TFServer()).build();
+            FireStoreUtils.initialize("requests_information");
             svc.start();
             System.out.println("Server started, listening on " + srvPort);
             svc.awaitTermination();
@@ -33,19 +33,7 @@ public class TFServer extends CNcontractGrpc.CNcontractImplBase{
         }
     }
 
-    private TFServer(FireStoreUtils fireStoreUtils) {
-        this.fireStoreUtils = fireStoreUtils;
-    }
 
-    @Override
-    public void isAlive(Void request, StreamObserver<Identifier> responseObserver) {
-        System.out.println("isAlive called");
-
-        Identifier reply = Identifier.newBuilder().setIdentifier("Server is Alive.").build();
-        responseObserver.onNext(reply);
-        responseObserver.onCompleted();
-
-    }
     @Override
     public StreamObserver<ImageBlock> submitImage(StreamObserver<Identifier> responseObserver) {
         return new ServerStreamObserver_ImageBlock(responseObserver);
@@ -59,7 +47,16 @@ public class TFServer extends CNcontractGrpc.CNcontractImplBase{
         // Implement the logic for getListOfLandMarks method
         // ...
         try {
-            FireStoreDocument doc =fireStoreUtils.useGetDoc( request.getIdentifier());
+
+            FireStoreDocument doc = FireStoreUtils.useGetDoc(request.getIdentifier());
+
+
+            // Check if the document is empty (not processed yet)
+            if (doc.getAr() == null || doc.getAr().isEmpty()) {
+                // Document exists but no analysis results yet
+                throw new FirestoreNotProcessedException("LandmarksApp has not processed this request yet");
+            }
+            // Process the analysis result and send the response to the client
             // Create a ListOfLandMarkResult builder
             ListOfLandMarkResult.Builder resultListBuilder = ListOfLandMarkResult.newBuilder();
 
@@ -92,10 +89,23 @@ public class TFServer extends CNcontractGrpc.CNcontractImplBase{
             // Send the response to the client
             responseObserver.onNext(resultList);
             responseObserver.onCompleted();
+        } catch (FirestoreInvalidIdentifierException e) {
+            // Invalid identifier
+            StatusRuntimeException statusException = new StatusRuntimeException(
+                    Status.INVALID_ARGUMENT.withDescription(e.getMessage()));
+            responseObserver.onError(statusException);
+        } catch (FirestoreNotProcessedException e) {
+            // Document exists but no analysis results yet
+            StatusRuntimeException statusException = new StatusRuntimeException(
+                    Status.NOT_FOUND.withDescription("LandmarksApp hasnt processed this request yet."));
+            responseObserver.onError(statusException);
         } catch (Exception e) {
-            StatusRuntimeException statusException = new StatusRuntimeException(Status.INTERNAL.withDescription(Objects.equals(e.getMessage(), "This Document does not exists") ? "LandmarksApp hasnt processed this request yet or the Identifier is incorrect" :e.getMessage()));
+            // Other exceptions
+            StatusRuntimeException statusException = new StatusRuntimeException(
+                    Status.INTERNAL.withDescription(e.getMessage()));
             responseObserver.onError(statusException);
         }
+
     }
 
     @Override
@@ -103,7 +113,7 @@ public class TFServer extends CNcontractGrpc.CNcontractImplBase{
         // Implement the logic for getMapOfIdentifier method
         // ...
         try {
-            FireStoreDocument doc =fireStoreUtils.useGetDoc( request.getIdentifier());
+            FireStoreDocument doc =FireStoreUtils.useGetDoc( request.getIdentifier());
             byte[] byteArray = GoogleCloudStorageUtils.downloadFromBucket("static_maps_storage",doc.getBlobName());
             int blockSize = 1024;
             int offset = 0;
@@ -142,7 +152,7 @@ public class TFServer extends CNcontractGrpc.CNcontractImplBase{
         // Implement the logic for getAboveCertainty method
         // ...
         try {
-            List<AboveCertaintyResult> aboveCertaintyResultList = fireStoreUtils.useGetAboveCertaintyResult(request.getCertainty());
+            List<AboveCertaintyResult> aboveCertaintyResultList = FireStoreUtils.useGetAboveCertaintyResult(request.getCertainty());
             List<Photos> photosList = new ArrayList<>();
             for (AboveCertaintyResult result : aboveCertaintyResultList) {
                 Photos photo = Photos.newBuilder()

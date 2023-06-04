@@ -3,6 +3,7 @@ package observers;
 import CNcontract.Identifier;
 import CNcontract.ImageBlock;
 import io.grpc.stub.StreamObserver;
+import utils.FireStoreUtils;
 import utils.GoogleCloudStorageUtils;
 import utils.PubSubUtils;
 
@@ -48,8 +49,9 @@ public class ServerStreamObserver_ImageBlock implements StreamObserver<ImageBloc
         GoogleCloudStorageUtils.uploadBlobToBucket("cn-bucket-europe",blobName, imageData);
 
         try {
+            FireStoreUtils.addEmptyDocument(identifier);
             PubSubUtils.publishMessage(identifier,"cn-bucket-europe",blobName);
-        } catch (IOException e) {
+        } catch (Exception e) {
             onError(e);
         }
 
